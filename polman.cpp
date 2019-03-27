@@ -17,37 +17,21 @@ public:
       plist.emplace(dvice, [&]( auto& row ) {
        row.device = dvice;
       });
-    }
-    else {
-      std::string changes;
-      plist.modify(iterator, dvice, [&]( auto& row ) {
-        row.device = dvice;
-      });
-    }
+    };
   }
   
   
   [[eosio::action]]
-  void adduser(name addnet,uint64_t listnum,name targetuser) {
-    require_auth(addnet);
-    if(checkdeployer(addnet) == 0) return;
+  void adduser(name contractcreator,name wantuser) {
+    if(checkdeployer(contractcreator) == 0) return;
     puser_index ulist(_code, _code.value);
-    auto iterator = ulist.find(listnum);
-    uint64_t dispensed;
+    auto iterator = ulist.find(wantuser.value);
     if( iterator == ulist.end() )
     {
-      //dispensed = dispenseusrnumber();
-      ulist.emplace(targetuser, [&]( auto& row ) {
-        //row.setnum = dispensed;
-        row.user = targetuser;
+      ulist.emplace(wantuser, [&]( auto& row ) {
+        row.user = wantuser;
       });
-    }/*
-    else {
-      std::string changes;
-      ulist.modify(iterator, targetuser, [&]( auto& row ) {
-        row.user = targetuser;
-      });
-    }*/
+    }
   }
 
   [[eosio::action]]
@@ -66,11 +50,9 @@ public:
     if(checkdeployer(addnet) == 0) return;
     require_auth(rqster);
     rqsted_index rqlist(_self,_code.value);
-    //uint64_t dispensed = dispenserqstnumber();
     puser_index pulist(_code, _code.value);
     auto iterator = pulist.find(rqster.value);
     rqlist.emplace(addnet, [&]( auto& row ){
-      //row.rqstid = dispensed;
       row.rqster = rqster;
       row.device = targetdevice;
       row.payload = NULL;
@@ -79,18 +61,6 @@ public:
   }
   
 private:
-  
-  /*static int dispenseusrnumber(){
-    static uint64_t datacounter=0;
-    datacounter = datacounter + 1;
-    return datacounter;
-  }*/
-  /*static int dispenserqstnumber(){
-    static uint64_t datacounter=0;
-    datacounter = datacounter + 1;
-    return datacounter;
-  }*/
-  
 	int checkdeployer(name tryer){
     name asd=eosio::contract::_self;
     if(tryer == asd) return 1;
@@ -98,12 +68,10 @@ private:
 	  
 	}
   struct [[eosio::table]] permitteduser {
-    //uint64_t setnum;
     name user;
-    uint64_t primary_key() const { return setnum; }
-    uint64_t get_secondary_1() const {return user.value; }
+    uint64_t primary_key() const { return user.value; }
   };
-  typedef eosio::multi_index<"permitlist"_n, permitteduser, indexed_by<"byuser"_n, const_mem_fun<permitteduser, uint64_t, &permitteduser::get_secondary_1>>> puser_index;
+  typedef eosio::multi_index<"permitlist"_n, permitteduser> puser_index;
   
   struct [[eosio::table]] permittedlist {
     name device;
@@ -112,15 +80,22 @@ private:
   typedef eosio::multi_index<"attachedlist"_n, permittedlist> atched_index;
   
   struct [[eosio::table]] requestedlist {
-	//uint64_t rqstid;
 	name device;
 	name rqster;
     uint64_t payload;
     bool isright;
-    uint64_t primary_key() const { return rqstid; }
+    uint64_t primary_key() const { return rqster.value; }
   };
   typedef eosio::multi_index<"rqstedlist"_n, requestedlist> rqsted_index;
   
+  void send_rquest(name targetdevice) {
+    action(
+      permission_level{get_self(),"active"_n},
+      get_self(),
+      "notify"_n,
+      std::make_tuple(targetdevice, name{user}.to_string())
+    ).send();
+  };
   
   
 };
