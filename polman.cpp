@@ -52,14 +52,25 @@ public:
     rqsted_index rqlist(_self,_code.value);
     puser_index pulist(_code, _code.value);
     auto iterator = pulist.find(rqster.value);
-    rqlist.emplace(addnet, [&]( auto& row ){
-      row.rqster = rqster;
-      row.device = targetdevice;
-      row.payload = NULL;
-      row.isright = !(iterator == pulist.end());
-    });
+    auto iter = rqlist.find(rqster.value);
+    if(iter == rqlist.end())
+    {
+      rqlist.emplace(addnet, [&]( auto& row ){
+        row.rqster = rqster;
+        row.device = targetdevice;
+        row.payload = NULL;
+        row.isright = !(iterator == pulist.end());
+      });
+    }
+    else{
+      rqlist.modify(iter, addnet, [&]( auto& row ){
+        row.rqster = rqster;
+        row.device = targetdevice;
+        row.payload = NULL;
+        row.isright = !(iterator == pulist.end());
+      });
+    }
   }
-  
 private:
 	int checkdeployer(name tryer){
     name asd=eosio::contract::_self;
@@ -93,7 +104,7 @@ private:
       permission_level{get_self(),"active"_n},
       get_self(),
       "notify"_n,
-      std::make_tuple(targetdevice, name{user}.to_string())
+      std::make_tuple(targetdevice, name{targetdevice}.to_string())
     ).send();
   };
   
