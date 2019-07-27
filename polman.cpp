@@ -44,6 +44,15 @@ public:
     plist.erase(iterator);
   }
   
+  [[eosio::action]]
+  void removeuser(name user) {
+    require_auth(dvice);
+
+    puser_index ulist(_self, _code.value);
+    auto iterator = ulist.find(wantuser.value);
+    eosio_assert(iterator != ulist.end(), "Record does not exist");
+    ulist.erase(iterator);
+  }
   
   [[eosio::action]]
   void rqstdata(name addnet,name rqster,name targetdevice){
