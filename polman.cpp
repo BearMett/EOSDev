@@ -46,7 +46,7 @@ public:
   
   [[eosio::action]]
   void removeuser(name user) {
-    require_auth(dvice);
+    require_auth(user);
 
     puser_index ulist(_self, _code.value);
     auto iterator = ulist.find(wantuser.value);
@@ -120,4 +120,4 @@ private:
   
 };
 
-EOSIO_DISPATCH( polman, (attachdevice)(adduser)(removedevice)(rqstdata))
+EOSIO_DISPATCH( polman, (attachdevice)(adduser)(removedevice)(removeuser)(rqstdata))
