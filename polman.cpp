@@ -24,6 +24,7 @@ public:
   [[eosio::action]]
   void adduser(name contractcreator,name wantuser) {
     if(checkdeployer(contractcreator) == 0) return;
+    require_auth(wantuser);
     puser_index ulist(_code, _code.value);
     auto iterator = ulist.find(wantuser.value);
     if( iterator == ulist.end() )
@@ -33,6 +34,24 @@ public:
       });
     }
   }
+  
+    
+  [[eosio::action]]
+  void addadmin(name contractcreator,name wantuser) {
+    if(checkdeployer(contractcreator) == 0) return;
+    require_auth(contractcreator);
+    padmin_index admitlist(_code, _code.value);
+    auto iterator = admitlist.find(wantuser.value);
+    if( iterator == admitlist.end() )
+    {
+      admitlist.emplace(wantuser, [&]( auto& row ) {
+        row.user = wantuser;
+      });
+    }
+  }
+  
+  
+  
 
   [[eosio::action]]
   void removedevice(name dvice) {
@@ -44,22 +63,13 @@ public:
     plist.erase(iterator);
   }
   
-  [[eosio::action]]
-  void removeuser(name user) {
-    require_auth(user);
-
-    puser_index ulist(_self, _code.value);
-    auto iterator = ulist.find(wantuser.value);
-    eosio_assert(iterator != ulist.end(), "Record does not exist");
-    ulist.erase(iterator);
-  }
   
   [[eosio::action]]
   void rqstdata(name addnet,name rqster,name targetdevice){
     if(checkdeployer(addnet) == 0) return;
     require_auth(rqster);
     rqsted_index rqlist(_self,_code.value);
-    puser_index pulist(_code, _code.value);
+    padmin_index pulist(_code, _code.value);
     auto iterator = pulist.find(rqster.value);
     auto iter = rqlist.find(rqster.value);
     if(iter == rqlist.end())
@@ -69,6 +79,7 @@ public:
         row.device = targetdevice;
         row.payload = NULL;
         row.isright = !(iterator == pulist.end());
+        row.tmstmp = now();
       });
     }
     else{
@@ -77,6 +88,7 @@ public:
         row.device = targetdevice;
         row.payload = NULL;
         row.isright = !(iterator == pulist.end());
+        row.tmstmp = now();
       });
     }
   }
@@ -87,11 +99,18 @@ private:
     else return 0;
 	  
 	}
-  struct [[eosio::table]] permitteduser {
+  struct [[eosio::table]] permituser {
     name user;
     uint64_t primary_key() const { return user.value; }
   };
-  typedef eosio::multi_index<"permitlist"_n, permitteduser> puser_index;
+  typedef eosio::multi_index<"permitlist"_n, permituser> puser_index;
+  
+  
+  struct [[eosio::table]] permitadmin {
+    name user;
+    uint64_t primary_key() const { return user.value; }
+  };
+  typedef eosio::multi_index<"admitlist"_n, permitadmin> padmin_index;
   
   struct [[eosio::table]] permittedlist {
     name device;
@@ -104,6 +123,7 @@ private:
 	name rqster;
     uint64_t payload;
     bool isright;
+    int tmstmp;
     uint64_t primary_key() const { return rqster.value; }
   };
   typedef eosio::multi_index<"rqstedlist"_n, requestedlist> rqsted_index;
@@ -120,4 +140,4 @@ private:
   
 };
 
-EOSIO_DISPATCH( polman, (attachdevice)(adduser)(removedevice)(removeuser)(rqstdata))
+EOSIO_DISPATCH( polman, (attachdevice)(adduser)(addadmin)(removedevice)(rqstdata))
