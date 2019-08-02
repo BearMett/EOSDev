@@ -49,7 +49,7 @@ public:
     require_auth(user);
 
     puser_index ulist(_self, _code.value);
-    auto iterator = ulist.find(wantuser.value);
+    auto iterator = ulist.find(user.value);
     eosio_assert(iterator != ulist.end(), "Record does not exist");
     ulist.erase(iterator);
   }
@@ -76,6 +76,33 @@ public:
         row.rqster = rqster;
         row.device = targetdevice;
         row.payload = NULL;
+        row.isright = !(iterator == pulist.end());
+      });
+    }
+  }
+  
+  [[eosio::action]]
+  void pushdata(name addnet,name rqster,name targetdevice,uint64_t data){
+    if(checkdeployer(addnet) == 0) return;
+    //require_auth(rqster);
+    rqsted_index rqlist(_self,_code.value);
+    puser_index pulist(_code, _code.value);
+    auto iterator = pulist.find(rqster.value);
+    auto iter = rqlist.find(rqster.value);
+    if(iter == rqlist.end())
+    {
+      rqlist.emplace(addnet, [&]( auto& row ){
+        row.rqster = rqster;
+        row.device = targetdevice;
+        row.payload = data;
+        row.isright = !(iterator == pulist.end());
+      });
+    }
+    else{
+      rqlist.modify(iter, addnet, [&]( auto& row ){
+        row.rqster = rqster;
+        row.device = targetdevice;
+        row.payload = data;
         row.isright = !(iterator == pulist.end());
       });
     }
@@ -120,4 +147,4 @@ private:
   
 };
 
-EOSIO_DISPATCH( polman, (attachdevice)(adduser)(removedevice)(removeuser)(rqstdata))
+EOSIO_DISPATCH( polman, (attachdevice)(adduser)(removedevice)(removeuser)(rqstdata)(pushdata))
