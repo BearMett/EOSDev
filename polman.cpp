@@ -8,8 +8,8 @@ public:
   }
 
   [[eosio::action]]
-  void attachdevice(name dvice) {
-    require_auth(dvice);
+  void attachdevice(name dvice,std::string iaddr,std::string port) {
+    //require_auth(dvice);
     atched_index plist(_code, _code.value);
     auto iterator = plist.find(dvice.value);
     if( iterator == plist.end() )
@@ -67,7 +67,7 @@ public:
       rqlist.emplace(addnet, [&]( auto& row ){
         row.rqster = rqster;
         row.device = targetdevice;
-        row.payload = NULL;
+        row.payload = "";
         row.isright = !(iterator == pulist.end());
       });
     }
@@ -75,14 +75,14 @@ public:
       rqlist.modify(iter, addnet, [&]( auto& row ){
         row.rqster = rqster;
         row.device = targetdevice;
-        row.payload = NULL;
+        row.payload = "";
         row.isright = !(iterator == pulist.end());
       });
     }
   }
   
   [[eosio::action]]
-  void pushdata(name addnet,name rqster,name targetdevice,uint64_t data){
+  void pushdata(name addnet,name rqster,name targetdevice,std::string data){
     if(checkdeployer(addnet) == 0) return;
     //require_auth(rqster);
     rqsted_index rqlist(_self,_code.value);
@@ -122,6 +122,8 @@ private:
   
   struct [[eosio::table]] permittedlist {
     name device;
+    std::string iaddr;
+    std::string port;
     uint64_t primary_key() const { return device.value; }
   };
   typedef eosio::multi_index<"attachedlist"_n, permittedlist> atched_index;
@@ -129,7 +131,7 @@ private:
   struct [[eosio::table]] requestedlist {
 	name device;
 	name rqster;
-    uint64_t payload;
+    std::string payload;
     bool isright;
     uint64_t primary_key() const { return rqster.value; }
   };
