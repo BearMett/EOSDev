@@ -1,4 +1,4 @@
-#include"polman.hpp"
+#include"polman.hpp" //EOSIO 및 Cpp 기본 라이브러리 포함
 
 
 public:
@@ -8,8 +8,8 @@ public:
   }
 
   [[eosio::action]]
-  void attachdevice(name dvice,std::string iaddr,std::string port) {
-    //require_auth(dvice);
+  void attachdevice(name dvice,std::string iaddr,std::string port) { //장치 추가를 위한 액션
+    //require_auth(dvice); // 인증 요구
     atched_index plist(_code, _code.value);
     auto iterator = plist.find(dvice.value);
     if( iterator == plist.end() )
@@ -22,8 +22,8 @@ public:
   
   
   [[eosio::action]]
-  void adduser(name contractcreator,name wantuser) {
-    if(checkdeployer(contractcreator) == 0) return;
+  void adduser(name contractcreator,name wantuser) { //사용자 추가를 위한 액션
+    if(checkdeployer(contractcreator) == 0) return; 
     puser_index ulist(_code, _code.value);
     auto iterator = ulist.find(wantuser.value);
     if( iterator == ulist.end() )
@@ -35,7 +35,7 @@ public:
   }
 
   [[eosio::action]]
-  void removedevice(name dvice) {
+  void removedevice(name dvice) { // 장치 제거를 위한 액션
     require_auth(dvice);
 
     atched_index plist(_self, _code.value);
@@ -45,7 +45,7 @@ public:
   }
   
   [[eosio::action]]
-  void removeuser(name user) {
+  void removeuser(name user) { // 사용자 제거를 위한 액션
     require_auth(user);
 
     puser_index ulist(_self, _code.value);
@@ -55,7 +55,7 @@ public:
   }
   
   [[eosio::action]]
-  void rqstdata(name addnet,name rqster,name targetdevice){
+  void rqstdata(name addnet,name rqster,name targetdevice){ // 자료를 읽어오기 위한 액션
     if(checkdeployer(addnet) == 0) return;
     require_auth(rqster);
     rqsted_index rqlist(_self,_code.value);
@@ -82,7 +82,7 @@ public:
   }
   
   [[eosio::action]]
-  void pushdata(name addnet,name rqster,name targetdevice,std::string data){
+  void pushdata(name addnet,name rqster,name targetdevice,std::string data){ // 
     if(checkdeployer(addnet) == 0) return;
     //require_auth(rqster);
     rqsted_index rqlist(_self,_code.value);
@@ -107,7 +107,7 @@ public:
       });
     }
   }
-private:
+private: // 컨트랙트 스스로만 접근할수 있는 액션 및 구조체
 	int checkdeployer(name tryer){
     name asd=eosio::contract::_self;
     if(tryer == asd) return 1;
@@ -149,4 +149,4 @@ private:
   
 };
 
-EOSIO_DISPATCH( polman, (attachdevice)(adduser)(removedevice)(removeuser)(rqstdata)(pushdata))
+EOSIO_DISPATCH( polman, (attachdevice)(adduser)(removedevice)(removeuser)(rqstdata)(pushdata)) //EOSIO에서 ABI로 컴파일하기 위한 메소드 목록
